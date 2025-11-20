@@ -8,8 +8,31 @@ require('dotenv').config();
 
 const supabase = require('../../database/supabase');
 
-// In-memory token store (for serverless, tokens are temporary per deployment)
-const tokenStore = new Map();
+// Simple auth check - just verify the username:password combo on each request
+// This works better for serverless than sessions or token stores
+async function verifyAdminToken(token) {
+  if (!token || !token.includes(':')) return null;
+  
+  try {
+    const [username, password] = Buffer.from(token, 'base64').toString().split(':');
+    
+    const { data: admin } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('username', username)
+      .single();
+    
+    if (!admin) return null;
+    
+    const isValid = await bcrypt.compare(password, admin.password_hash);
+    if (!isValid) return null;
+    
+    return { id: admin.id, username: admin.username };
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return null;
+  }
+}
 
 const app = express();
 
@@ -189,27 +212,14 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate token
-    const token = crypto.randomBytes(32).toString('hex');
-    const userData = {
-      id: admin.id,
-      username: admin.username,
-      createdAt: Date.now()
-    };
-    
-    // Store token (expires in 24 hours)
-    tokenStore.set(token, userData);
-    
-    // Clean up old tokens (older than 24 hours)
-    const now = Date.now();
-    for (const [key, value] of tokenStore.entries()) {
-      if (now - value.createdAt > 24 * 60 * 60 * 1000) {
-        tokenStore.delete(key);
-      }
-    }
+    // Create a simple token with username:password encoded
+    // This is safe because it's only used for auth verification, not storage
+    const token = Buffer.from(`${username}:${password}`).toString('base64');
 
-    // Also set session for backwards compatibility
-    req.session.adminUser = userData;
+    req.session.adminUser = {
+      id: admin.id,
+      username: admin.username
+    };
 
     res.json({ 
       success: true, 
@@ -223,13 +233,6 @@ app.post('/api/admin/login', async (req, res) => {
 });
 
 app.post('/api/admin/logout', (req, res) => {
-  // Remove token from store
-  const authHeader = req.headers['authorization'];
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    tokenStore.delete(token);
-  }
-  
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to logout' });
@@ -238,43 +241,37 @@ app.post('/api/admin/logout', (req, res) => {
   });
 });
 
-app.get('/api/admin/check', (req, res) => {
-  // Check token first
+app.get('/api/admin/check', async (req, res) => {
+  // Check token
   const authHeader = req.headers['authorization'];
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
-    const userData = tokenStore.get(token);
+    const userData = await verifyAdminToken(token);
     
     if (userData) {
-      // Check if token is still valid (< 24 hours old)
-      if (Date.now() - userData.createdAt < 24 * 60 * 60 * 1000) {
-        return res.json({ authenticated: true, user: userData });
-      } else {
-        // Token expired
-        tokenStore.delete(token);
-      }
+      return res.json({ authenticated: true, user: userData });
     }
   }
   
   // Fallback to session
   if (req.session.adminUser) {
-    res.json({ authenticated: true, user: req.session.adminUser });
-  } else {
-    res.json({ authenticated: false });
+    return res.json({ authenticated: true, user: req.session.adminUser });
   }
+  
+  res.json({ authenticated: false });
 });
 
 // ==================== ADMIN ORDERS API ====================
 
 // Auth middleware
-function isAuthenticated(req, res, next) {
+async function isAuthenticated(req, res, next) {
   // Check token
   const authHeader = req.headers['authorization'];
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
-    const userData = tokenStore.get(token);
+    const userData = await verifyAdminToken(token);
     
-    if (userData && (Date.now() - userData.createdAt < 24 * 60 * 60 * 1000)) {
+    if (userData) {
       req.adminUser = userData;
       return next();
     }

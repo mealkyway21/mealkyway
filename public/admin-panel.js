@@ -113,12 +113,17 @@ async function checkAuth() {
         // Check for auth token in localStorage
         const authToken = localStorage.getItem('adminAuthToken');
         
+        console.log('=== AUTH CHECK ===');
+        console.log('Token exists:', !!authToken);
+        console.log('Token length:', authToken ? authToken.length : 0);
+        
         if (!authToken) {
             console.log('No auth token found, redirecting to login');
             window.location.href = '/admin-login.html';
             return;
         }
 
+        console.log('Sending auth check request...');
         const response = await fetch(`${API_URL}/api/admin/check`, {
             credentials: 'include',
             headers: {
@@ -126,22 +131,24 @@ async function checkAuth() {
                 'Authorization': `Bearer ${authToken}`
             }
         });
+        
+        console.log('Auth check response status:', response.status);
         const data = await response.json();
-
-        console.log('Auth check:', data);
+        console.log('Auth check response data:', data);
 
         if (!data.authenticated) {
-            console.log('Not authenticated, redirecting to login');
+            console.log('❌ Not authenticated, redirecting to login');
             localStorage.removeItem('adminAuthToken');
             window.location.href = '/admin-login.html';
         } else {
+            console.log('✅ Authenticated as:', data.user.username);
             const usernameElement = document.getElementById('adminUsername');
             if (usernameElement) {
                 usernameElement.textContent = `👤 ${data.user.username}`;
             }
         }
     } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('❌ Auth check error:', error);
         localStorage.removeItem('adminAuthToken');
         window.location.href = '/admin-login.html';
     }
