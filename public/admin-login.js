@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({ username, password })
             });
 
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok && data.success) {
                 showMessage('Login successful! Redirecting...', 'success');
                 setTimeout(() => {
-                    window.location.href = '/admin/panel';
+                    window.location.href = '/admin-panel.html';
                 }, 1000);
             } else {
                 showMessage(data.error || 'Invalid credentials', 'error');
@@ -56,11 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkAuth() {
         try {
-            const response = await fetch(`${API_URL}/api/admin/check`);
+            const response = await fetch(`${API_URL}/api/admin/check`, {
+                credentials: 'include'
+            });
             const data = await response.json();
 
             if (data.authenticated) {
-                window.location.href = '/admin/panel';
+                window.location.href = '/admin-panel.html';
             }
         } catch (error) {
             console.error('Auth check error:', error);

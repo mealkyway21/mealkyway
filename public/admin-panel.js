@@ -111,7 +111,10 @@ function stopAutoRefresh() {
 async function checkAuth() {
     try {
         const response = await fetch(`${API_URL}/api/admin/check`, {
-            credentials: 'same-origin'
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
         const data = await response.json();
 
@@ -119,13 +122,16 @@ async function checkAuth() {
 
         if (!data.authenticated) {
             console.log('Not authenticated, redirecting to login');
-            window.location.href = '/admin';
+            window.location.href = '/admin-login.html';
         } else {
-            document.getElementById('adminUsername').textContent = `👤 ${data.username}`;
+            const usernameElement = document.getElementById('adminUsername');
+            if (usernameElement) {
+                usernameElement.textContent = `👤 ${data.user.username}`;
+            }
         }
     } catch (error) {
         console.error('Auth check error:', error);
-        window.location.href = '/admin';
+        window.location.href = '/admin-login.html';
     }
 }
 
@@ -135,13 +141,13 @@ async function logout() {
     try {
         const response = await fetch(`${API_URL}/api/admin/logout`, { 
             method: 'POST',
-            credentials: 'same-origin'
+            credentials: 'include'
         });
         console.log('Logout response:', response.status);
-        window.location.href = '/admin';
+        window.location.href = '/admin-login.html';
     } catch (error) {
         console.error('Logout error:', error);
-        window.location.href = '/admin';
+        window.location.href = '/admin-login.html';
     }
 }
 
@@ -149,8 +155,8 @@ async function logout() {
 async function loadStats() {
     console.log('loadStats called');
     try {
-        const response = await fetch(`${API_URL}/api/admin/stats`, {
-            credentials: 'same-origin'
+        const response = await fetch(`${API_URL}/api/admin/orders`, {
+            credentials: 'include'
         });
         
         console.log('Stats response status:', response.status);
@@ -231,7 +237,7 @@ async function loadOrders() {
 
     try {
         const response = await fetch(`${API_URL}/api/admin/orders?${params.toString()}`, {
-            credentials: 'same-origin'
+            credentials: 'include'
         });
         
         console.log('Orders response status:', response.status);
@@ -239,7 +245,7 @@ async function loadOrders() {
         if (!response.ok) {
             console.error('Orders API error:', response.status, response.statusText);
             if (response.status === 401) {
-                window.location.href = '/admin';
+                window.location.href = '/admin-login.html';
                 return;
             }
         }
@@ -345,7 +351,7 @@ function printOrders() {
 async function editOrder(orderId) {
     try {
         const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
-            credentials: 'same-origin'
+            credentials: 'include'
         });
         const data = await response.json();
 
@@ -382,7 +388,7 @@ async function saveOrder(e) {
     try {
         const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
             method: 'PUT',
-            credentials: 'same-origin',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -417,7 +423,7 @@ async function deleteOrder(orderId) {
     try {
         const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
             method: 'DELETE',
-            credentials: 'same-origin'
+            credentials: 'include'
         });
 
         const data = await response.json();
