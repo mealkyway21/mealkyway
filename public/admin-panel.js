@@ -17,13 +17,39 @@ const hallData = {
         'বেগম রোকেয়া হল'
     ],
     RMC: [
-        'শহীদ ডা. মোহাম্মদ মোস্তফা হল',
-        'বঙ্গবন্ধু শেখ মুজিবুর রহমান হল',
-        'শহীদ ডা. শামসুদ্দিন আহমেদ হল',
-        'জননেত্রী শেখ হাসিনা হল',
-        'এমএস হল'
+        'শহীদ শাহ মাইনুল আহসান চৌধুরী পিংকু ছাত্রাবাস',
+        'শহীদ মুক্তিযোদ্ধা কাজী নূরুন্নবী ছাত্রাবাস',
+        'Intern Hostel',
+        'Nursing Hostel'
     ]
 };
+
+// Short form mapping for hall names (for display in admin panel)
+const hallShortForm = {
+    // RU Halls
+    'শহীদ সৈয়দ নজরুল ইসলাম হল': 'সনি হল',
+    'শহীদ জিয়াউর রহমান হল': 'জিয়া হল',
+    'মতিহার হল': 'মতিহার',
+    'শাহ মখদুম হল': 'মখদুম',
+    'সৈয়দ আমীর আলী হল': 'আমীর আলী',
+    'মাদার বক্স হল': 'মাদার বক্স',
+    'কাজী নজরুল ইসলাম হল': 'নজরুল হল',
+    'বঙ্গমাতা হল': 'বঙ্গমাতা',
+    'তাপসী রাবেয়া হল': 'তাপসী',
+    'বেগম রোকেয়া হল': 'রোকেয়া',
+    // RMC Halls
+    'শহীদ শাহ মাইনুল আহসান চৌধুরী পিংকু ছাত্রাবাস': 'পিংকু হল',
+    'শহীদ মুক্তিযোদ্ধা কাজী নূরুন্নবী ছাত্রাবাস': 'নূরুন্নবী হল',
+    'Intern Hostel': 'Intern Hostel',
+    'Nursing Hostel': 'Nursing Hostel'
+};
+
+// Function to get short form of hall name
+function getHallShortForm(fullHallName) {
+    // Extract just the hall name without institution prefix
+    const hallOnly = fullHallName.includes(' - ') ? fullHallName.split(' - ')[1] : fullHallName;
+    return hallShortForm[hallOnly] || hallOnly;
+}
 
 // Log to verify script is loading
 console.log('Admin Panel JS loaded successfully');
@@ -361,7 +387,7 @@ function displayOrders(orders) {
             <td><strong>${formatDate(order.date)}</strong></td>
             <td><span style="color: var(--primary-blue); font-weight: 600;">${order.name}</span></td>
             <td>${order.contact_number}</td>
-            <td>${order.hall}</td>
+            <td>${getHallShortForm(order.hall)}</td>
             <td><span style="background: var(--bright-yellow); padding: 4px 12px; border-radius: 8px; font-weight: 600;">${order.room}</span></td>
             <td><strong style="color: var(--primary-blue); font-size: 16px;">${order.quantity}</strong></td>
             <td><strong style="color: var(--success-green); font-size: 16px;">৳${order.quantity * 30}</strong></td>
