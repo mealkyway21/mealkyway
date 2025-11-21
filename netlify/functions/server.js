@@ -319,8 +319,7 @@ app.get('/api/admin/orders', isAuthenticated, async (req, res) => {
           room
         )
       `)
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (date) {
       query = query.eq('date', date);
