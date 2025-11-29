@@ -1,6 +1,6 @@
-# 🥛 Mealky Way - Milk Delivery Service Web Application
+# 🥛 MealkyWay - Milk Delivery Service Web Application
 
-A complete, production-ready web application for **Mealky Way**, a milk delivery service operating in Rajshahi University. This project includes a customer-facing ordering system and a comprehensive admin panel for order management.
+A complete, production-ready web application for **MealkyWay**, a milk delivery service operating in Rajshahi University. This project includes a customer-facing ordering system and a comprehensive admin panel for managing orders and customers.
 
 ---
 
@@ -76,7 +76,7 @@ A complete, production-ready web application for **Mealky Way**, a milk delivery
 ## 📁 Project Structure
 
 ```
-MilkDelivary/
+MilkDelivery/
 ├── database/
 │   ├── init-db.js          # Database initialization script
 │   ├── db.js               # Database connection helper
@@ -109,7 +109,8 @@ MilkDelivary/
 
 ### Step 1: Clone or Download the Project
 ```bash
-cd "e:\Web Projects\MilkDelivary"
+git clone https://github.com/DewanNafis/MilkDeliveryWeb.git
+cd MilkDeliveryWeb
 ```
 
 ### Step 2: Install Dependencies
@@ -137,12 +138,14 @@ This creates the SQLite database and tables:
 - `orders` - Order records
 - `admin_users` - Admin credentials
 
-**Default Admin Account:**
+**Default Admin Account (for local development / testing only):**
 - Username: `admin`
 - Password: `admin123`
 
+> Important: Change the default admin credentials and SESSION_SECRET before deploying to production.
+
 ### Step 4: Configure Environment Variables
-The `.env` file contains:
+Create a `.env` file (or copy `.env.example` if provided) with the following values:
 ```
 PORT=3000
 SESSION_SECRET=mealkyway_secret_key_change_in_production
@@ -151,7 +154,7 @@ ADMIN_PASSWORD=admin123
 NODE_ENV=development
 ```
 
-⚠️ **Important**: Change `SESSION_SECRET` in production!
+⚠️ **Important**: Use a strong SESSION_SECRET (recommended minimum: 32 random characters) in production and change admin credentials.
 
 ---
 
@@ -173,7 +176,7 @@ You'll see:
 ```
 ╔═══════════════════════════════════════════════════╗
 ║                                                   ║
-║          🥛 Mealky Way Server Running 🥛          ║
+║          🥛 MealkyWay Server Running 🥛          ║
 ║                                                   ║
 ║  📍 Local:    http://localhost:3000               ║
 ║  🔧 API:      http://localhost:3000/api           ║
@@ -446,8 +449,8 @@ NODE_ENV=production
 ```
 
 **For Production:**
-- Change `SESSION_SECRET` to a strong random string
-- Consider changing admin credentials
+- Change `SESSION_SECRET` to a strong random string (recommended minimum: 32 characters)
+- Change default admin credentials
 - Set `NODE_ENV=production`
 - Use PostgreSQL instead of SQLite for better scalability
 
@@ -546,7 +549,7 @@ CREATE TABLE admin_users (
 
 ### 4. Admin Login (`/admin`)
 - Simple login form
-- Default credentials displayed
+- Default credentials displayed (development only)
 - Session-based authentication
 
 ### 5. Admin Panel (`/admin/panel`)
@@ -619,7 +622,7 @@ npm install
 
 ## 📝 License
 
-This project is created for **Mealky Way** milk delivery service.
+This project is created for **MealkyWay** milk delivery service.
 
 ---
 
@@ -651,10 +654,10 @@ This project is created for **Mealky Way** milk delivery service.
 
 For issues or questions:
 - **Phone**: 01703770715, 01568088468
-- **Website**: @mealkyway.netlify.app
+- **Website**: https://mealkyway.netlify.app
 
 ---
 
-**Built with ❤️ for Mealky Way**
+**Built with ❤️ for MealkyWay**
 
 *আমরা দিচ্ছি রেডি টু ড্রিঙ্ক দুধ* 🥛
