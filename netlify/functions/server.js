@@ -5,6 +5,8 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { Parser } = require('json2csv');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const supabase = require('../../database/supabase');
@@ -477,82 +479,52 @@ app.delete('/api/admin/orders/:id', isAuthenticated, async (req, res) => {
 
 // ==================== NOTICE APIs ====================
 
+// Path to notice file
+const NOTICE_FILE = path.join(__dirname, '../../data/notice.json');
+
+// Ensure data directory exists
+const dataDir = path.join(__dirname, '../../data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// Initialize notice file if it doesn't exist
+if (!fs.existsSync(NOTICE_FILE)) {
+  fs.writeFileSync(NOTICE_FILE, JSON.stringify({ 
+    content: 'Welcome to Milky Way! 🥛 Fresh milk delivery available daily to all RU and RMC halls!',
+    updated_at: new Date().toISOString()
+  }));
+}
+
 // Get current notice
-app.get('/api/notice', async (req, res) => {
+app.get('/api/notice', (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('notices')
-      .select('*')
-      .order('id', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      console.error('Notice fetch error:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      return res.status(500).json({ error: 'Failed to fetch notice. Table may not exist.' });
-    }
-
-    res.json({ notice: data?.content || '' });
+    const data = fs.readFileSync(NOTICE_FILE, 'utf8');
+    const notice = JSON.parse(data);
+    res.json({ notice: notice.content || '' });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Notice read error:', err);
+    res.json({ notice: '' });
   }
 });
 
 // Update notice (admin only)
-app.put('/api/admin/notice', isAuthenticated, async (req, res) => {
+app.put('/api/admin/notice', isAuthenticated, (req, res) => {
   try {
     const { content } = req.body;
-
+    
     console.log('Updating notice with content:', content);
-
-    // Get the current notice ID or create a new one
-    const { data: existing, error: fetchError } = await supabase
-      .from('notices')
-      .select('id')
-      .order('id', { ascending: false })
-      .limit(1)
-      .single();
-
-    console.log('Existing notice:', existing);
-    console.log('Fetch error:', fetchError);
-
-    let result;
-    if (existing) {
-      console.log('Updating existing notice with ID:', existing.id);
-      result = await supabase
-        .from('notices')
-        .update({ content, updated_at: new Date().toISOString() })
-        .eq('id', existing.id)
-        .select();
-    } else {
-      console.log('Creating new notice');
-      result = await supabase
-        .from('notices')
-        .insert({ content })
-        .select();
-    }
-
-    console.log('Update/Insert result:', result);
-
-    if (result.error) {
-      console.error('Notice update error:', result.error);
-      console.error('Error code:', result.error.code);
-      console.error('Error message:', result.error.message);
-      console.error('Error details:', result.error.details);
-      return res.status(500).json({ 
-        error: 'Failed to update notice', 
-        details: result.error.message,
-        hint: result.error.hint || 'Make sure the notices table exists in Supabase'
-      });
-    }
-
+    
+    fs.writeFileSync(NOTICE_FILE, JSON.stringify({ 
+      content, 
+      updated_at: new Date().toISOString() 
+    }, null, 2));
+    
+    console.log('Notice updated successfully');
     res.json({ success: true, message: 'Notice updated successfully' });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Notice update error:', err);
+    res.status(500).json({ error: 'Failed to update notice' });
   }
 });
 
